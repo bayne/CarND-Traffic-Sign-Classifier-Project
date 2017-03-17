@@ -1,3 +1,24 @@
+# from tensorflow.examples.tutorials.mnist import input_data
+#
+# mnist = input_data.read_data_sets("MNIST_data/", reshape=False)
+# X_train, y_train           = mnist.train.images, mnist.train.labels
+# X_validation, y_validation = mnist.validation.images, mnist.validation.labels
+# X_test, y_test             = mnist.test.images, mnist.test.labels
+#
+# print(y_validation[2])
+#
+# assert(len(X_train) == len(y_train))
+# assert(len(X_validation) == len(y_validation))
+# assert(len(X_test) == len(y_test))
+#
+# print()
+# print("Image Shape: {}".format(X_train[0].shape))
+# print()
+# print("Training Set:   {} samples".format(len(X_train)))
+# print("Validation Set: {} samples".format(len(X_validation)))
+# print("Test Set:       {} samples".format(len(X_test)))
+# exit()
+
 import pickle
 
 import tensorflow as tf
@@ -76,10 +97,9 @@ image_shape = (width, height)
 
 print(image_shape)
 
-EPOCHS = 10
-BATCH_SIZE = 128
+EPOCHS = 40
+BATCH_SIZE = 2048
 LEARNING_RATE = 0.001
-image_channel_count = 3
 
 features_placeholder = tf.placeholder(tf.float32, (None, height, width, None), name='features_placeholder')
 features = tf.image.rgb_to_grayscale(features_placeholder)
@@ -122,7 +142,7 @@ with tf.Session() as sess:
     print()
     for i in range(EPOCHS):
         # TODO Shuffle?
-        # X_train, y_train = shuffle(X_train, y_train)
+#        X_train, y_train = shuffle(train["features"], train["labels"])
         for offset in range(0, n_train, BATCH_SIZE):
             end = offset + BATCH_SIZE
             batch_x, batch_y = train["features"][offset:end], train["labels"][offset:end]
