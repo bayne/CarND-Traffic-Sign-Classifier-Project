@@ -1,24 +1,3 @@
-# from tensorflow.examples.tutorials.mnist import input_data
-#
-# mnist = input_data.read_data_sets("MNIST_data/", reshape=False)
-# X_train, y_train           = mnist.train.images, mnist.train.labels
-# X_validation, y_validation = mnist.validation.images, mnist.validation.labels
-# X_test, y_test             = mnist.test.images, mnist.test.labels
-#
-# print(y_validation[2])
-#
-# assert(len(X_train) == len(y_train))
-# assert(len(X_validation) == len(y_validation))
-# assert(len(X_test) == len(y_test))
-#
-# print()
-# print("Image Shape: {}".format(X_train[0].shape))
-# print()
-# print("Training Set:   {} samples".format(len(X_train)))
-# print("Validation Set: {} samples".format(len(X_validation)))
-# print("Test Set:       {} samples".format(len(X_test)))
-# exit()
-
 import pickle
 
 import tensorflow as tf
