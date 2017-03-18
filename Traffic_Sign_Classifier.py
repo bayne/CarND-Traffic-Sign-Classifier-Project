@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import flatten
 
+
 def safe_indexing(X, indices):
     """Return items or rows from X using indices.
     Allows simple indexing of lists or arrays.
@@ -16,23 +17,17 @@ def safe_indexing(X, indices):
     """
     if hasattr(X, "iloc"):
         # Pandas Dataframes and Series
-        try:
-            return X.iloc[indices]
-        except ValueError:
-            # Cython typed memoryviews internally used in pandas do not support
-            # readonly buffers.
-            warnings.warn("Copying input dataframe for slicing.",
-                          DataConversionWarning)
-            return X.copy().iloc[indices]
+        return X.iloc[indices]
     elif hasattr(X, "shape"):
         if hasattr(X, 'take') and (hasattr(indices, 'dtype') and
-                                   indices.dtype.kind == 'i'):
+                                           indices.dtype.kind == 'i'):
             # This is often substantially faster than X[indices]
             return X.take(indices, axis=0)
         else:
             return X[indices]
     else:
         return [X[idx] for idx in indices]
+
 
 def shuffle(*arrays):
     random_state = np.random.mtrand._rand
@@ -68,15 +63,21 @@ def shuffle(*arrays):
     else:
         return resampled_arrays
 
+
 def LeNet(x, dropout_prob):
     # Arguments used for tf.truncated_normal, randomly defines variables for the weights and biases for each layer
     mu = 0
     sigma = 0.1
 
+    conv0_W = tf.Variable(tf.truncated_normal(shape=(1, 1, 1, 1), mean=mu, stddev=sigma))
+    conv0_b = tf.Variable(tf.zeros(1))
+    conv0 = tf.nn.conv2d(x, conv0_W, strides=[1, 1, 1, 1], padding='SAME') + conv0_b
+    conv0 = tf.nn.relu(conv0)
+
     # SOLUTION: Layer 1: Convolutional. Input = 32x32x1. Output = 28x28x6.
     conv1_W = tf.Variable(tf.truncated_normal(shape=(5, 5, 1, 6), mean=mu, stddev=sigma))
     conv1_b = tf.Variable(tf.zeros(6))
-    conv1 = tf.nn.conv2d(x, conv1_W, strides=[1, 1, 1, 1], padding='VALID') + conv1_b
+    conv1 = tf.nn.conv2d(conv0, conv1_W, strides=[1, 1, 1, 1], padding='VALID') + conv1_b
 
     # SOLUTION: Activation.
     conv1 = tf.nn.relu(conv1)
@@ -123,6 +124,7 @@ def LeNet(x, dropout_prob):
 
     return logits
 
+
 training_file = 'train.p'
 validation_file = 'valid.p'
 testing_file = 'test.p'
@@ -136,15 +138,21 @@ with open(testing_file, mode='rb') as f:
 
 n_train = len(train["features"])
 n_test = len(test["features"])
+n_valid = len(valid["features"])
 n_classes = len(set(test["labels"]))
+
+print(n_train)
+print(n_valid)
+print(n_test)
+print(n_classes)
 
 width, height = len(test["features"][0]), len(test["features"][0][0])
 image_shape = (width, height)
 
 EPOCHS = 20
-BATCH_SIZE = 128
+BATCH_SIZE = 256
 LEARNING_RATE = 0.001
-DROPOUT = 0.90
+DROPOUT = 0.60
 
 features_placeholder = tf.placeholder(tf.float32, (None, height, width, None), name='features_placeholder')
 features = tf.image.rgb_to_grayscale(features_placeholder)
@@ -173,7 +181,8 @@ def evaluate(X_data, y_data):
     sess = tf.get_default_session()
     for offset in range(0, num_examples, BATCH_SIZE):
         batch_x, batch_y = X_data[offset:offset + BATCH_SIZE], y_data[offset:offset + BATCH_SIZE]
-        accuracy = sess.run(accuracy_operation, feed_dict={features_placeholder: batch_x, logits_placeholder: batch_y, dropout_prob:1.0})
+        accuracy = sess.run(accuracy_operation,
+                            feed_dict={features_placeholder: batch_x, logits_placeholder: batch_y, dropout_prob: 1.0})
         total_accuracy += (accuracy * len(batch_x))
     return total_accuracy / num_examples
 
@@ -192,7 +201,8 @@ with tf.Session() as sess:
         for offset in range(0, n_train, BATCH_SIZE):
             end = offset + BATCH_SIZE
             batch_x, batch_y = X_train[offset:end], y_train[offset:end]
-            sess.run(training_operation, feed_dict={features_placeholder: batch_x, logits_placeholder: batch_y, dropout_prob:DROPOUT})
+            sess.run(training_operation,
+                     feed_dict={features_placeholder: batch_x, logits_placeholder: batch_y, dropout_prob: DROPOUT})
 
         # TODO are the labels formatted correctly?
         validation_accuracy = evaluate(valid["features"], valid["labels"])
